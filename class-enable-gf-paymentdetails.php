@@ -2,7 +2,7 @@
 GFForms::include_addon_framework();
 
 class Enable_GF_PaymentDetails extends GFAddOn {
-	protected $_version = '0.4';
+	protected $_version = '0.7.1';
 	protected $_min_gravityforms_version = '2.0';
 	protected $_slug = 'enablegfpaymentdetails';
 	protected $_path = 'enablegfpaymentdetails/enablegfpaymentdetails.php';
@@ -193,12 +193,28 @@ class Enable_GF_PaymentDetails extends GFAddOn {
 		
 		if (strpos($payment_amount, '<input') === false) {
 			$payment_amount = GFCommon::to_money( $payment_amount, $entry['currency'] );
-			$input = '<input type="text" id="payment_amount" name="payment_amount" class="gform_currency" value="' . $payment_amount . '">';
+			$html = '<input type="text" id="payment_amount" name="payment_amount" class="gform_currency" value="' . $payment_amount . '">';
 			//remove_action('gform_payment_amount', array($this, 'admin_edit_payment_amount'));
-			return $input;
 		} else {
-			return $payment_amount;
+			$html = $payment_amount;
 		}
+		if (strpos($html, '<select') === false) {
+			$type = $entry['transaction_type'];
+			$type = $type == null ? '' : $type;
+			$types = array('' => '', '1' => 'Payment', '2' => 'Subscription');
+			$html .= '
+				</span>
+			</div>
+			<div id="gf_transaction_type" class="gf_payment_detail">
+				Transaction Type:
+				<span id="gform_transaction_type">
+				<select id="transaction_type" name="transaction_type">';
+				foreach ($types as $key => $value) {
+					$html .= '<option value="'.$key.'"'.($type==$key?' selected':'').'>'.$value.'</option>';
+				}
+			$html .= '</select>';
+		}
+		return $html;
 	}
 
 	public function admin_update_payment( $form, $entry_id ) {
@@ -221,6 +237,8 @@ class Enable_GF_PaymentDetails extends GFAddOn {
 		$payment_amount      = GFCommon::to_number( rgpost( 'payment_amount' ), $entry['currency'] );
 		$payment_transaction = rgpost( 'custom_transaction_id' );
 		$payment_date        = rgpost( 'payment_date' );
+		$transaction_type    = rgpost( 'transaction_type' );
+		$transaction_type = $transaction_type === '' ? null : $transaction_type;
 		if ( empty( $payment_date ) ) {
 			$payment_date = gmdate( 'y-m-d H:i:s' );
 		} else {
@@ -233,6 +251,7 @@ class Enable_GF_PaymentDetails extends GFAddOn {
 		GFAPI::update_entry_property( $entry['id'], 'payment_amount', $payment_amount );
 		GFAPI::update_entry_property( $entry['id'], 'payment_date', $payment_date );
 		GFAPI::update_entry_property( $entry['id'], 'transaction_id', $payment_transaction );
+		GFAPI::update_entry_property( $entry['id'], 'transaction_type', $transaction_type );
 
 		//adding a note
 		$this->add_note( $entry['id'], sprintf( __( 'Payment information was manually updated. Status: %s. Amount: %s. Transaction Id: %s. Date: %s', 'gravityformspaypal' ), $payment_status, GFCommon::to_money( $payment_amount, $entry['currency'] ), $payment_transaction, $payment_date ) );
