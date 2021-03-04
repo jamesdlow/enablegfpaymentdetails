@@ -12,6 +12,9 @@ Requires Gravity Forms 2.0.
 
  # Version History
 
+## 0.7.2
+- Add transaction type update to notes on save
+
 ## 0.7.1
 - Add edit entry transaction_type between payment/subscription
 

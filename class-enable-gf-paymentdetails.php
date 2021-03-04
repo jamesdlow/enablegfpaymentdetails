@@ -2,7 +2,7 @@
 GFForms::include_addon_framework();
 
 class Enable_GF_PaymentDetails extends GFAddOn {
-	protected $_version = '0.7.1';
+	protected $_version = '0.7.2';
 	protected $_min_gravityforms_version = '2.0';
 	protected $_slug = 'enablegfpaymentdetails';
 	protected $_path = 'enablegfpaymentdetails/enablegfpaymentdetails.php';
@@ -252,9 +252,19 @@ class Enable_GF_PaymentDetails extends GFAddOn {
 		GFAPI::update_entry_property( $entry['id'], 'payment_date', $payment_date );
 		GFAPI::update_entry_property( $entry['id'], 'transaction_id', $payment_transaction );
 		GFAPI::update_entry_property( $entry['id'], 'transaction_type', $transaction_type );
-
+		
+		if ($transaction_type === null) {
+			$type = '(None)';
+		} else if ($transaction_type == 1) {
+			$type = 'Payment';
+		} else if ($transaction_type == 2) {
+			$type = 'Recurring';
+		} else {
+			$type = ''.$transaction_type;
+		}
+		
 		//adding a note
-		$this->add_note( $entry['id'], sprintf( __( 'Payment information was manually updated. Status: %s. Amount: %s. Transaction Id: %s. Date: %s', 'gravityformspaypal' ), $payment_status, GFCommon::to_money( $payment_amount, $entry['currency'] ), $payment_transaction, $payment_date ) );
+		$this->add_note( $entry['id'], sprintf( __( 'Payment information was manually updated. Status: %s. Amount: %s. Transaction Id: %s. Date: %s Transaction Type: %s', 'gravityformspaypal' ), $payment_status, GFCommon::to_money( $payment_amount, $entry['currency'] ), $payment_transaction, $payment_date, $type ) );
 
 		if ( $payment_status === 'Paid' ) {
 			GFAPI::send_notifications( $form, $entry, 'complete_payment' );
