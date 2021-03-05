@@ -2,7 +2,7 @@
 GFForms::include_addon_framework();
 
 class Enable_GF_PaymentDetails extends GFAddOn {
-	protected $_version = '0.7.2';
+	protected $_version = '0.7.3';
 	protected $_min_gravityforms_version = '2.0';
 	protected $_slug = 'enablegfpaymentdetails';
 	protected $_path = 'enablegfpaymentdetails/enablegfpaymentdetails.php';
@@ -247,11 +247,21 @@ class Enable_GF_PaymentDetails extends GFAddOn {
 		}
 
 		//updating the entry properties
-		GFAPI::update_entry_property( $entry['id'], 'payment_status', $payment_status );
-		GFAPI::update_entry_property( $entry['id'], 'payment_amount', $payment_amount );
-		GFAPI::update_entry_property( $entry['id'], 'payment_date', $payment_date );
-		GFAPI::update_entry_property( $entry['id'], 'transaction_id', $payment_transaction );
-		GFAPI::update_entry_property( $entry['id'], 'transaction_type', $transaction_type );
+		$params = array('payment_status' => $payment_status,
+			'payment_amount' => $payment_amount,
+			'payment_date' => $payment_date,
+			'transaction_id' => $payment_transaction,
+			'transaction_type' => $transaction_type
+		);
+		$updated = array();
+		$note = 'Payment information was manually updated.';
+		foreach ($params as $key => $value) {
+			if ($value != $entry[$key]) {
+				GFAPI::update_entry_property( $entry['id'], $key, $value );
+				$updated[$key] = $value;
+				$note .= ' '.$key.': '.$value;
+			}
+		}
 		
 		if ($transaction_type === null) {
 			$type = '(None)';
@@ -263,10 +273,13 @@ class Enable_GF_PaymentDetails extends GFAddOn {
 			$type = ''.$transaction_type;
 		}
 		
-		//adding a note
-		$this->add_note( $entry['id'], sprintf( __( 'Payment information was manually updated. Status: %s. Amount: %s. Transaction Id: %s. Date: %s Transaction Type: %s', 'gravityformspaypal' ), $payment_status, GFCommon::to_money( $payment_amount, $entry['currency'] ), $payment_transaction, $payment_date, $type ) );
-
-		if ( $payment_status === 'Paid' ) {
+		if (count($updated) > 0) {
+			//adding a note
+			$this->add_note( $entry['id'],  __( $note ));
+		}
+		
+		//Only send notifcation if payment status is actually updated to paid, not if that is the current status
+		if ( $updated['payment_status'] === 'Paid' ) {
 			GFAPI::send_notifications( $form, $entry, 'complete_payment' );
 		}
 	}

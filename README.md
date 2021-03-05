@@ -12,6 +12,10 @@ Requires Gravity Forms 2.0.
 
  # Version History
 
+## 0.7.3
+- Only update payment details if they actually change
+- Only send notifcation if payment details actually updated to "Paid"
+
 ## 0.7.2
 - Add transaction type update to notes on save
 
