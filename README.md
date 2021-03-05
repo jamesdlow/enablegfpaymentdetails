@@ -12,6 +12,9 @@ Requires Gravity Forms 2.0.
 
  # Version History
 
+## 0.7.4
+- Log note under logged in user for better audit trail as per GForms built in payment editing
+
 ## 0.7.3
 - Only update payment details if they actually change
 - Only send notifcation if payment details actually updated to "Paid"

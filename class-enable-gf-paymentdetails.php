@@ -2,7 +2,7 @@
 GFForms::include_addon_framework();
 
 class Enable_GF_PaymentDetails extends GFAddOn {
-	protected $_version = '0.7.3';
+	protected $_version = '0.7.4';
 	protected $_min_gravityforms_version = '2.0';
 	protected $_slug = 'enablegfpaymentdetails';
 	protected $_path = 'enablegfpaymentdetails/enablegfpaymentdetails.php';
@@ -275,7 +275,14 @@ class Enable_GF_PaymentDetails extends GFAddOn {
 		
 		if (count($updated) > 0) {
 			//adding a note
-			$this->add_note( $entry['id'],  __( $note ));
+			$current_user = wp_get_current_user();
+			if ($current_user->ID == 0) {
+				//https://docs.gravityforms.com/adding-note-when-using-addon-framework/#add-note-
+				$this->add_note( $entry['id'], __( $note ));
+			} else {
+				//https://docs.gravityforms.com/managing-notes-with-the-gfapi/#add-note
+				GFAPI::add_note( $entry['id'], $current_user->ID, $current_user->user_login, __( $note ));
+			}
 		}
 		
 		//Only send notifcation if payment status is actually updated to paid, not if that is the current status
